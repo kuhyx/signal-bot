@@ -35,7 +35,7 @@ def fetch_and_download_cat_image():
     with open(image_filename, 'rb') as image_file:
         base64_encoded_data = base64.b64encode(image_file.read()).decode('utf-8')
     
-    print(f"Base64 Encoded Data: {base64_encoded_data}")
+    os.remove(image_filename)
     return base64_encoded_data
 
 def send_cat():
@@ -61,13 +61,12 @@ async def listen_to_server():
         try:
             async for message in websocket:
                 message_json = json.loads(message)
-                #inside_message = message_json.get('envelope', {}).get('syncMessage', {}).get('sentMessage', {})
                 inside_message = message_json.get('envelope', {}).get('dataMessage', {})
+                if inside_message == {}:
+                    inside_message = message_json.get('envelope', {}).get('syncMessage', {}).get('sentMessage', {})
                 print("message", message)
-                if inside_message.get('message') == "!kot":
-                    print("kot message detected")
-                    if inside_message.get('groupInfo', {}).get('groupId', {}) == GROUP_ID:
-                        send_cat()
+                if inside_message.get('message') == "!kot" and inside_message.get('groupInfo', {}).get('groupId', {}) == GROUP_ID:
+                    send_cat()
         except websockets.ConnectionClosed as e:
             print(f"Connection closed: {e}")
 
