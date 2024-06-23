@@ -1,0 +1,7 @@
+signalbot
+command
+flask
+uvicorn
+asyncio
+websockets
+requests
