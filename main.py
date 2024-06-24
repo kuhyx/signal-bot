@@ -110,8 +110,8 @@ def update_string_count(string, mapping):
 
 
 command_map = {
-    ("!kot", "!koty", "!cat", "!cats", "!meow"): lambda recipient: send_image(fetch_and_download_image("https://api.thecatapi.com/v1/images/search", [0, 'url']), recipient),
-    ("!pies", "!psy", "!dog", "!dogs", "!woof"): lambda recipient: send_image(fetch_and_download_image("https://dog.ceo/api/breeds/image/random", 'message'), recipient),
+    ("!kot", "!koty", "!kots", "!cat", "!cats", "!meow", "!miau"): lambda recipient: send_image(fetch_and_download_image("https://api.thecatapi.com/v1/images/search", [0, 'url']), recipient),
+    ("!pies", "!psy", "!dog", "!dogs", "!woof", "!szczek"): lambda recipient: send_image(fetch_and_download_image("https://dog.ceo/api/breeds/image/random", 'message'), recipient),
     ("!traps"): lambda recipient:  send_image(download_image(((rule34Py().random_post(["trap"])).sample)), recipient)
 }
 
