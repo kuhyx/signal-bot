@@ -189,7 +189,7 @@ async def get_attachments():
         print(f"Request failed with status code: {response.status_code}")
         print(response)
 
-async def is_message_reaction(message):
+def is_message_reaction(message):
     message_json = json.loads(message)
     inside_message = message_json.get('envelope', {}).get('dataMessage', {}).get('reaction', {})
     if inside_message == {}:
