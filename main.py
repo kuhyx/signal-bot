@@ -158,7 +158,7 @@ async def trigger_command(message_content, recipient):
     message_value = message_message(message_content)
     
     try:
-        if message_value is not None:
+        if message_value is not None and message_value[0] == "!":
             current_time = datetime.now()
             if last_command_time and current_time - last_command_time < timedelta(seconds=10):
                 if not warning_sent:
