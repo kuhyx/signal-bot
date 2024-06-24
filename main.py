@@ -184,7 +184,7 @@ async def get_attachments():
 async def listen_to_server(queue):
     uri = f"ws://localhost:9922/v1/receive/{PHONE_NUMBER}?send_read_receipts=false"
     async with websockets.connect(uri) as websocket:
-        print(f"Connected to server at {uri}")
+        print(f"Connected to signal server")
         try:
             async for message in websocket:
                 message_content = extract_message_content(message)
