@@ -159,7 +159,7 @@ async def trigger_command(message_content, recipient):
 async def send_to_group(message_content):
     if message_group_id(message_content) == GROUP_ID:
         #await count_messages(message_content, queue)
-        trigger_command(message_content, GROUP_ID_SEND)
+        await trigger_command(message_content, GROUP_ID_SEND)
 
 async def remove_attachment(attachment_id):
     response = requests.delete(REMOVE_ATTACHMENT_URL + attachment_id)
@@ -188,7 +188,7 @@ async def listen_to_server(queue):
         try:
             async for message in websocket:
                 message_content = extract_message_content(message)
-                #send_to_group(message_content)
+                await send_to_group(message_content)
                 if message_content.get('destinationNumber', {}) == PHONE_NUMBER:
                     #await count_messages(message_content, queue)
                     await trigger_command(message_content, PHONE_NUMBER)
