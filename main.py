@@ -189,17 +189,28 @@ async def get_attachments():
         print(f"Request failed with status code: {response.status_code}")
         print(response)
 
+async def is_message_reaction(message):
+    message_json = json.loads(message)
+    inside_message = message_json.get('envelope', {}).get('dataMessage', {}).get('reaction', {})
+    if inside_message == {}:
+        inside_message = message_json.get('envelope', {}).get('syncMessage', {}).get('reaction', {})
+        if inside_message != {}:
+            return True
+    return False
+
 async def listen_to_server(counter):
     uri = f"ws://localhost:9922/v1/receive/{PHONE_NUMBER}?send_read_receipts=false"
     async with websockets.connect(uri) as websocket:
         print(f"Connected to signal server")
         try:
             async for message in websocket:
-                message_content = extract_message_content(message)
-                await send_to_group(message_content, counter, message)
-                if message_content.get('destinationNumber', {}) == PHONE_NUMBER:
-                    await count_messages(json.loads(message).get('envelope', {}), counter)
-                    await trigger_command(message_content, PHONE_NUMBER)
+                if is_message_reaction(message) == False:
+                    print("message: ", message)
+                    message_content = extract_message_content(message)
+                    await send_to_group(message_content, counter, message)
+                    if message_content.get('destinationNumber', {}) == PHONE_NUMBER:
+                        #await count_messages(json.loads(message).get('envelope', {}), counter)
+                        await trigger_command(message_content, PHONE_NUMBER)
         except websockets.ConnectionClosed as e:
             print(f"Connection closed: {e}")
 
