@@ -4,6 +4,7 @@ import websockets
 import requests
 import base64
 import json
+from rule34Py import rule34Py
 from datetime import datetime, time, timedelta
 
 
@@ -15,15 +16,7 @@ GROUP_ID = os.getenv('GROUP_ID', '')
 GROUP_ID_SEND = os.getenv('GROUP_ID_SEND', '')
 CAT_API = os.getenv('CAT_API', '')
 
-def fetch_and_download_dog_image():
-    # Send request to The Cat API
-    response = requests.get("https://dog.ceo/api/breeds/image/random")
-    response.raise_for_status()  # Ensure the request was successful
-    
-    # Parse the response JSON to get the image URL
-    data = response.json()
-    image_url = data['message']
-    
+def download_image(image_url):
     # Download the image
     image_response = requests.get(image_url)
     image_response.raise_for_status()  # Ensure the request was successful
@@ -41,38 +34,30 @@ def fetch_and_download_dog_image():
     os.remove(image_filename)
     return base64_encoded_data
 
-
-def fetch_and_download_cat_image():
-    # Send request to The Cat API
-    response = requests.get("https://api.thecatapi.com/v1/images/search")
+def fetch_and_download_image(api_url, image_url_key):
+    # Send request to the API
+    response = requests.get(api_url)
     response.raise_for_status()  # Ensure the request was successful
     
     # Parse the response JSON to get the image URL
+    print("response: ", response.json)
     data = response.json()
-    image_url = data[0]['url']
     
-    # Download the image
-    image_response = requests.get(image_url)
-    image_response.raise_for_status()  # Ensure the request was successful
+    # Retrieve the image URL based on the provided key
+    if isinstance(image_url_key, list):
+        image_url = data
+        for key in image_url_key:
+            image_url = image_url[key]
+    else:
+        image_url = data[image_url_key]
     
-    # Extract the image filename from the URL
-    image_filename = image_url.split("/")[-1]
+    return download_image(image_url)
 
-    with open(image_filename, 'wb') as image_file:
-        image_file.write(image_response.content)
-    
-    # Convert the image to base64 encoded data
-    with open(image_filename, 'rb') as image_file:
-        base64_encoded_data = base64.b64encode(image_file.read()).decode('utf-8')
-    
-    os.remove(image_filename)
-    return base64_encoded_data
-
-def send_cat():
+def send_image(base64_attachments, recipients=GROUP_ID_SEND):
     data = {
-        "base64_attachments": [fetch_and_download_cat_image()],
+        "base64_attachments": [base64_attachments],
         "number": PHONE_NUMBER,
-        "recipients": [GROUP_ID_SEND]
+        "recipients": [recipients]
     }
     response = requests.post(SEND_URL, json=data)
     if response.status_code == 200:
@@ -81,24 +66,12 @@ def send_cat():
         print(f"Request failed with status code: {response.status_code}")
         print(response.text)
 
-def send_dog():
-    data = {
-        "base64_attachments": [fetch_and_download_dog_image()],
-        "number": PHONE_NUMBER,
-        "recipients": [GROUP_ID_SEND]
-    }
-    response = requests.post(SEND_URL, json=data)
-    if response.status_code == 200:
-        print("Request was successful.")
-    else:
-        print(f"Request failed with status code: {response.status_code}")
-    print(response.text)
-
-def send_message(message_content):
+def send_message(message_content, recipients=GROUP_ID_SEND):
     data = {
         "message": message_content,
         "number": PHONE_NUMBER,
-        "recipients": [GROUP_ID_SEND]
+        #"recipients": [GROUP_ID_SEND]
+        "recipients": [recipients]
     }
     response = requests.post(SEND_URL, json=data)
     if response.status_code == 200:
@@ -137,9 +110,11 @@ def update_string_count(string, mapping):
 
 
 command_map = {
-    "!kot": send_cat,
-    "!pies": send_dog
+    "!kot": lambda recipient: send_image(fetch_and_download_image("https://api.thecatapi.com/v1/images/search", [0, 'url']), recipient),
+    "!pies": lambda recipient: send_image(fetch_and_download_image("https://dog.ceo/api/breeds/image/random", 'message'), recipient),
+    "!traps": lambda recipient:  send_image(download_image(((rule34Py().random_post(["trap"])).sample)), recipient)
 }
+
 
 def update_string_count(string, mapping):
     if string in mapping:
@@ -181,12 +156,21 @@ async def listen_to_server(queue):
         try:
             async for message in websocket:
                 message_content = extract_message_content(message)
+                print(message_content)
                 if message_group_id(message_content) == GROUP_ID:
                     await count_messages(message_content, queue)
                     message_value = message_message(message_content)
                     if message_value in command_map:
                         # Call the corresponding function
-                        command_map[message_value]()
+                        command_map[message_value](GROUP_ID_SEND)
+                    else:
+                        print("Unknown command")
+                elif message_content.get('destinationNumber', {}) == PHONE_NUMBER:
+                    await count_messages(message_content, queue)
+                    message_value = message_message(message_content)
+                    if message_value in command_map:
+                        # Call the corresponding function
+                        command_map[message_value](PHONE_NUMBER)
                     else:
                         print("Unknown command")
         except websockets.ConnectionClosed as e:
