@@ -155,8 +155,10 @@ async def trigger_command(message_content, recipient):
             if message_value in command_triggers:
                 await command_function(recipient)
                 break
+    except TypeError:
+        send_message(f"trigger_command, TypeError {message_content}", recipient)
     except:
-        send_message("Rudnik coś popsuł", recipient)
+        send_message(f"trigger_command, unknown error {message_content}", recipient)
 
 async def send_to_group(message_content):
     if message_group_id(message_content) == GROUP_ID:
