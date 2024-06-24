@@ -21,13 +21,17 @@ class StringCounter:
     def __init__(self):
         self.string_map = {}
 
-    async def update_string_map(self, string):
-        await asyncio.sleep(0)  # This is just to simulate asynchronous behavior
-        if string in self.string_map:
-            self.string_map[string] += 1
+    async def update_string_map(self, key, common_name):
+        if key in self.string_map:
+            self.string_map[key]['count'] += 1
         else:
-            self.string_map[string] = 1
+            self.string_map[key] = {'common_name': common_name, 'count': 1}
         return self.string_map
+
+    def get_common_name(self, key):
+        if key in self.string_map:
+            return self.string_map[key]['common_name']
+        return None
 
 def download_image(image_url):
     # Download the image
@@ -112,28 +116,16 @@ def extract_source_uuid(message):
     inside_message = message_json.get('sourceUuid', {})
     return inside_message
 
-def update_string_count(string, mapping):
-    if string in mapping:
-        mapping[string] += 1
-    else:
-        mapping[string] = 1
-    return mapping
-
-
 command_map = {
-    ("!kot", "!koty", "!kots", "!cat", "!cats", "!meow", "!miau"): lambda recipient: send_image(fetch_and_download_image("https://api.thecatapi.com/v1/images/search", [0, 'url']), recipient),
+    ("!kot", "!koty", "!kots", "!cat", "!cats", "!meow", "!miau", "!ᴋᴏᴛ", "!𝓴𝓸𝓽", "!𝗸𝗼𝘁"): lambda recipient: send_image(fetch_and_download_image("https://api.thecatapi.com/v1/images/search", [0, 'url']), recipient),
     ("!pies", "!psy", "!dog", "!dogs", "!woof", "!szczek"): lambda recipient: send_image(fetch_and_download_image("https://dog.ceo/api/breeds/image/random", 'message'), recipient),
     ("!traps"): lambda recipient:  send_image(download_image(((rule34Py().random_post(["trap"])).sample)), recipient)
 }
 
-
-def update_string_count(string, mapping):
-    if string in mapping:
-        mapping[string] += 1
-    else:
-        mapping[string] = 1
-    return mapping
-
+def extract_source_name(message):
+    message_json = message
+    inside_message = message_json.get('sourceName', {})
+    return inside_message
 
 
 USER_MESSAGE_COUNT = {}
@@ -142,8 +134,9 @@ USER_MESSAGE_COUNT = {}
 async def count_messages(message_content, counter):
     if message_content:
         uuid = extract_source_uuid(message_content)
-        await counter.update_string_map(uuid)
-
+        source_name = extract_source_name(message_content)
+        await counter.update_string_map(uuid, source_name)
+        send_message(counter.string_map, PHONE_NUMBER)
 
 
 async def scheduled_task(counter):
