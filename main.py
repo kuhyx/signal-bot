@@ -17,6 +17,18 @@ GROUP_ID = os.getenv('GROUP_ID', '')
 GROUP_ID_SEND = os.getenv('GROUP_ID_SEND', '')
 CAT_API = os.getenv('CAT_API', '')
 
+class StringCounter:
+    def __init__(self):
+        self.string_map = {}
+
+    async def update_string_map(self, string):
+        await asyncio.sleep(0)  # This is just to simulate asynchronous behavior
+        if string in self.string_map:
+            self.string_map[string] += 1
+        else:
+            self.string_map[string] = 1
+        return self.string_map
+
 def download_image(image_url):
     # Download the image
     image_response = requests.get(image_url)
@@ -66,9 +78,9 @@ async def send_image(base64_attachments, recipients=GROUP_ID_SEND):
         print(f"Request failed with status code: {response.status_code}")
         print(response.text)
 
-def send_message(message_content, recipients=GROUP_ID_SEND):
+def send_message(message_content, recipients=PHONE_NUMBER):
     data = {
-        "message": message_content,
+        "message": str(message_content),
         "number": PHONE_NUMBER,
         "recipients": [recipients]
     }
@@ -76,7 +88,7 @@ def send_message(message_content, recipients=GROUP_ID_SEND):
     if response.status_code == 200:
         print("Request was successful.")
     else:
-        print(f"Request failed with status code: {response.status_code}")
+        print(f"Request failed with status code: {response.status_code} {data}")
         print(response.text)
 
 
@@ -96,9 +108,9 @@ def extract_message_content(message):
 
     
 def extract_source_uuid(message):
-    message_json = json.loads(message)
-    #inside_message = message_json.get('envelope', {}).get('sourceUuid', {})
-    return ""
+    message_json = message
+    inside_message = message_json.get('sourceUuid', {})
+    return inside_message
 
 def update_string_count(string, mapping):
     if string in mapping:
@@ -127,15 +139,14 @@ def update_string_count(string, mapping):
 USER_MESSAGE_COUNT = {}
 
 
-async def count_messages(message_content, queue):
+async def count_messages(message_content, counter):
     if message_content:
         uuid = extract_source_uuid(message_content)
-        #USER_MESSAGE_COUNT = update_string_count(uuid, USER_MESSAGE_COUNT)
-        #await queue.put(USER_MESSAGE_COUNT)
+        await counter.update_string_map(uuid)
 
 
 
-async def scheduled_task(queue):
+async def scheduled_task(counter):
     while True:
         now = datetime.now()
         target_time = datetime.combine(now.date(), time(21, 37))
@@ -144,9 +155,8 @@ async def scheduled_task(queue):
         wait_time = (target_time - now).total_seconds()
         await asyncio.sleep(wait_time)
         # Trigger your function here
-        message_count = await queue.get()
-        send_message(message_count)
-        queue.task_done()
+        send_message(counter.string_map, GROUP_ID_SEND)
+        counter.string_map = {}
 
 async def trigger_command(message_content, recipient):
     message_value = message_message(message_content)
@@ -161,9 +171,9 @@ async def trigger_command(message_content, recipient):
     except:
         send_message(f"trigger_command, unknown error {message_content}", recipient)
 
-async def send_to_group(message_content):
+async def send_to_group(message_content, counter):
     if message_group_id(message_content) == GROUP_ID:
-        #await count_messages(message_content, queue)
+        await count_messages(message_content, queue)
         await trigger_command(message_content, GROUP_ID_SEND)
 
 async def remove_attachment(attachment_id):
@@ -186,25 +196,25 @@ async def get_attachments():
         print(f"Request failed with status code: {response.status_code}")
         print(response)
 
-async def listen_to_server(queue):
+async def listen_to_server(counter):
     uri = f"ws://localhost:9922/v1/receive/{PHONE_NUMBER}?send_read_receipts=false"
     async with websockets.connect(uri) as websocket:
         print(f"Connected to signal server")
         try:
             async for message in websocket:
                 message_content = extract_message_content(message)
-                await send_to_group(message_content)
+                #await send_to_group(message_content)
                 if message_content.get('destinationNumber', {}) == PHONE_NUMBER:
-                    #await count_messages(message_content, queue)
+                    await count_messages(json.loads(message).get('envelope', {}), counter)
                     await trigger_command(message_content, PHONE_NUMBER)
         except websockets.ConnectionClosed as e:
             print(f"Connection closed: {e}")
 
 async def main():
-    queue = asyncio.Queue()
-    task1 = asyncio.create_task(listen_to_server(queue))
-   # task2 = asyncio.create_task(scheduled_task(queue))
-    await asyncio.gather(task1)# task2)
+    counter = StringCounter()
+    task1 = asyncio.create_task(listen_to_server(counter))
+    task2 = asyncio.create_task(scheduled_task(counter))
+    await asyncio.gather(task1, task2)
 
 if __name__ == "__main__":
     asyncio.run(main())
