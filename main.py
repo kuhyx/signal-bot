@@ -151,10 +151,11 @@ async def scheduled_task(queue):
 async def trigger_command(message_content, recipient):
     message_value = message_message(message_content)
     try:
-        for command_triggers, command_function in command_map.items():
-            if message_value in command_triggers:
-                await command_function(recipient)
-                break
+        if message_value !== None:
+            for command_triggers, command_function in command_map.items():
+                if message_value in command_triggers:
+                    await command_function(recipient)
+                    break
     except TypeError:
         send_message(f"trigger_command, TypeError {message_content}", recipient)
     except:
