@@ -171,9 +171,9 @@ async def trigger_command(message_content, recipient):
     except:
         send_message(f"trigger_command, unknown error {message_content}", recipient)
 
-async def send_to_group(message_content, counter):
+async def send_to_group(message_content, counter, message):
     if message_group_id(message_content) == GROUP_ID:
-        await count_messages(message_content, queue)
+        await count_messages(json.loads(message).get('envelope', {}), counter)
         await trigger_command(message_content, GROUP_ID_SEND)
 
 async def remove_attachment(attachment_id):
@@ -203,7 +203,7 @@ async def listen_to_server(counter):
         try:
             async for message in websocket:
                 message_content = extract_message_content(message)
-                #await send_to_group(message_content)
+                await send_to_group(message_content, counter, message)
                 if message_content.get('destinationNumber', {}) == PHONE_NUMBER:
                     await count_messages(json.loads(message).get('envelope', {}), counter)
                     await trigger_command(message_content, PHONE_NUMBER)
