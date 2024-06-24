@@ -16,6 +16,8 @@ SEND_URL = 'http://localhost:9922/v2/send'
 GROUP_ID = os.getenv('GROUP_ID', '')
 GROUP_ID_SEND = os.getenv('GROUP_ID_SEND', '')
 CAT_API = os.getenv('CAT_API', '')
+last_command_time = None
+warning_sent = False
 
 class StringCounter:
     def __init__(self):
@@ -152,17 +154,28 @@ async def scheduled_task(counter):
         counter.string_map = {}
 
 async def trigger_command(message_content, recipient):
+    global last_command_time, warning_sent
     message_value = message_message(message_content)
+    
     try:
-        if message_value != None:
+        if message_value is not None:
+            current_time = datetime.now()
+            if last_command_time and current_time - last_command_time < timedelta(seconds=10):
+                if not warning_sent:
+                    send_message("BEEP BOOP POCZEKAJ 10 SEKUND.", recipient)
+                    warning_sent = True
+                return
+
             for command_triggers, command_function in command_map.items():
                 if message_value in command_triggers:
                     await command_function(recipient)
+                    last_command_time = current_time
+                    warning_sent = False
                     break
     except TypeError:
         send_message(f"trigger_command, TypeError {message_content}", recipient)
-    except:
-        send_message(f"trigger_command, unknown error {message_content}", recipient)
+    except Exception as e:
+        send_message(f"trigger_command, unknown error {message_content}: {str(e)}", recipient)
 
 async def send_to_group(message_content, counter, message):
     if message_group_id(message_content) == GROUP_ID:
