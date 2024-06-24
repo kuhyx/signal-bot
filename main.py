@@ -70,7 +70,6 @@ def send_message(message_content, recipients=GROUP_ID_SEND):
     data = {
         "message": message_content,
         "number": PHONE_NUMBER,
-        #"recipients": [GROUP_ID_SEND]
         "recipients": [recipients]
     }
     response = requests.post(SEND_URL, json=data)
@@ -151,10 +150,13 @@ async def scheduled_task(queue):
 
 async def trigger_command(message_content, recipient):
     message_value = message_message(message_content)
-    for command_triggers, command_function in command_map.items():
-        if message_value in command_triggers:
-            await command_function(recipient)
-            break
+    try:
+        for command_triggers, command_function in command_map.items():
+            if message_value in command_triggers:
+                await command_function(recipient)
+                break
+    except:
+        send_message("Rudnik coś popsuł", recipient)
 
 async def send_to_group(message_content):
     if message_group_id(message_content) == GROUP_ID:
