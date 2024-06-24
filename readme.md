@@ -70,7 +70,7 @@ The bot uses `asyncio` for running the WebSocket server and simple Python fetch 
     ```sh
     sudo docker run -d --name signal-api --restart=always -p 9922:8080 \
         -v /home/user/signal-api:/home/.local/share/signal-cli \
-        -e 'MODE=native' bbernhard/signal-cli-rest-api
+        -e 'MODE=json-rpc' bbernhard/signal-cli-rest-api
     ```
 
 2. Access the Signal CLI setup page:
