@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 *.jpg
 *.gif
+nohup.out
