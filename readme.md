@@ -72,15 +72,16 @@ The bot uses `asyncio` for running the WebSocket server and simple Python fetch 
         -v /home/user/signal-api:/home/.local/share/signal-cli \
         -e 'MODE=json-rpc' bbernhard/signal-cli-rest-api:0.167-dev
     ```
-Pay attention to `:0.167-dev`! Try to upgrade if there is a new one as you can see errors connected with connecting your signal account otherwise
-Double check if you are using correct version using: [http://localhost:9922/v1/about](http://localhost:9922/v1/about)
-2. Access the Signal CLI setup page:
+    Pay attention to `:0.167-dev`! Try to upgrade if there is a new one as you can see errors connected with connecting your signal account otherwise
+    Double check if you are using correct version using: [http://localhost:9922/v1/about](http://localhost:9922/v1/about)
+   
+3. Access the Signal CLI setup page:
 
     ```sh
     http://localhost:9922/v1/qrcodelink?device_name=signal-api
     ```
 
-3. Scan the QR code to complete the Signal CLI setup.
+4. Scan the QR code to complete the Signal CLI setup.
 
 ### Clone the Repository
 
