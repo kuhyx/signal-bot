@@ -4,8 +4,9 @@ import websockets
 import requests
 import base64
 import json
-from rule34Py import rule34Py
 from datetime import datetime, time, timedelta
+# from rule34py import rule34py
+
 
 
 # Set up environment variable for the phone number
@@ -121,7 +122,7 @@ def extract_source_uuid(message):
 command_map = {
     ("!kot", "!koty", "!kots", "!cat", "!cats", "!meow", "!miau", "!ᴋᴏᴛ", "!𝓴𝓸𝓽", "!𝗸𝗼𝘁"): lambda recipient: send_image(fetch_and_download_image("https://api.thecatapi.com/v1/images/search", [0, 'url']), recipient),
     ("!pies", "!psy", "!dog", "!dogs", "!woof", "!szczek", "!𝗽𝗶𝗲𝘀", "!͓̽p͓̽i͓̽e͓̽s͓̽"): lambda recipient: send_image(fetch_and_download_image("https://dog.ceo/api/breeds/image/random", 'message'), recipient),
-    ("!traps"): lambda recipient:  send_image(download_image(((rule34Py().random_post(["trap"])).sample)), recipient)
+    ("!traps"): lambda recipient: send_message("No traps for now, sorry 😔", recipient)
 }
 
 def extract_source_name(message):
@@ -222,7 +223,7 @@ async def listen_to_server(counter):
                     message_content = extract_message_content(message)
                     await send_to_group(message_content, counter, message)
                     if message_content.get('destinationNumber', {}) == PHONE_NUMBER:
-                        #await count_messages(json.loads(message).get('envelope', {}), counter)
+                        await count_messages(json.loads(message).get('envelope', {}), counter)
                         await trigger_command(message_content, PHONE_NUMBER)
         except websockets.ConnectionClosed as e:
             print(f"Connection closed: {e}")
