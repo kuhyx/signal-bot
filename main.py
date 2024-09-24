@@ -5,7 +5,8 @@ import requests
 import base64
 import json
 from datetime import datetime, time, timedelta
-# from rule34py import rule34py
+from rule34Py import rule34Py
+r34Py = rule34Py()
 
 
 
@@ -122,7 +123,7 @@ def extract_source_uuid(message):
 command_map = {
     ("!kot", "!koty", "!kots", "!cat", "!cats", "!meow", "!miau", "!ᴋᴏᴛ", "!𝓴𝓸𝓽", "!𝗸𝗼𝘁"): lambda recipient: send_image(fetch_and_download_image("https://api.thecatapi.com/v1/images/search", [0, 'url']), recipient),
     ("!pies", "!psy", "!dog", "!dogs", "!woof", "!szczek", "!𝗽𝗶𝗲𝘀", "!͓̽p͓̽i͓̽e͓̽s͓̽"): lambda recipient: send_image(fetch_and_download_image("https://dog.ceo/api/breeds/image/random", 'message'), recipient),
-    ("!traps"): lambda recipient: send_message("No traps for now, sorry 😔", recipient)
+    ("!traps"): lambda recipient: send_image(download_image(((r34Py.random_post(["trap"])).sample)), recipient)
 }
 
 def extract_source_name(message):
