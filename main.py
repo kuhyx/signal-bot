@@ -137,6 +137,7 @@ USER_MESSAGE_COUNT = {}
 
 async def count_messages(message_content, counter):
     if message_content and should_count(message_content):
+        print("counting message: ", message_content)
         uuid = extract_source_uuid(message_content)
         source_name = extract_source_name(message_content)
         await counter.update_string_map(uuid, source_name)
@@ -215,6 +216,7 @@ def is_message_reaction(message):
 
 def should_count(message_content):
     if message_content.get('destinationNumber', {}) != PHONE_NUMBER:
+        print("not counting because destinationNumber != PHONE_NUMBER")
         return False 
     if message_content.get('sticker') != None:
         print("not counting because message has a sticker")
