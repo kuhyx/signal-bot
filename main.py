@@ -214,6 +214,8 @@ def is_message_reaction(message):
     return False
 
 def should_count(message_content):
+    if message_content.get('destinationNumber', {}) != PHONE_NUMBER:
+        return False 
     if message_content.get('sticker') != None:
         print("not counting because message has a sticker")
         return False 
@@ -230,7 +232,7 @@ async def listen_to_server(counter):
                     message_content = extract_message_content(message)
                     await send_to_group(message_content, counter, message)
                     print("message_content.get('sticker') == None: ", message_content.get('sticker') == None, message_content.get('sticker'))
-                    if message_content.get('destinationNumber', {}) != PHONE_NUMBER:
+                    if should_count(message_content):
                         await count_messages(json.loads(message).get('envelope', {}), counter)
                         await trigger_command(message_content, PHONE_NUMBER)
         except websockets.ConnectionClosed as e:
