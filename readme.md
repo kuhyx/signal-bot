@@ -23,7 +23,11 @@ This guide will help you set up and run a Signal bot using the Signal CLI REST A
                 "timestamp": 1719177728639,
                 "message": "MESSAGE_CONTENT",
                 "expiresInSeconds": 0,
-                "viewOnce": false
+                "viewOnce": false,
+                'sticker': {
+                    'packId': '166dd1b5b060200035a533bbb0d118ff',
+                    'stickerId': 6
+                },
             }
         }
     },
@@ -47,6 +51,10 @@ This guide will help you set up and run a Signal bot using the Signal CLI REST A
             "message": "MESSAGE_CONTENT",
             "expiresInSeconds": 0,
             "viewOnce": false,
+            'sticker': {
+                'packId': '166dd1b5b060200035a533bbb0d118ff',
+                'stickerId': 6
+            },
             "groupInfo": {
                 "groupId": "ID_OF_GROUP_SEND_TO",
                 "type": "DELIVER"
