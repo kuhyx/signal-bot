@@ -181,7 +181,6 @@ async def trigger_command(message_content, recipient):
 
 async def send_to_group(message_content, counter, message):
     if message_group_id(message_content) == GROUP_ID:
-        await count_messages(json.loads(message).get('envelope', {}), counter)
         await trigger_command(message_content, GROUP_ID_SEND)
 
 async def remove_attachment(attachment_id):
