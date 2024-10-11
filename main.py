@@ -5,17 +5,15 @@ import requests
 import base64
 import json
 from datetime import datetime, time, timedelta
-# from rule34Py import rule34Py
-# r34Py = rule34Py()
+from fastapi import FastAPI
 
+# Create FastAPI app
+app = FastAPI()
 
-
-# Set up environment variable for the phone number
-PHONE_NUMBER = os.getenv('PHONE_NUMBER', '1234567890')  # Default to '1234567890' if not set
+PHONE_NUMBER = os.getenv('PHONE_NUMBER', '1234567890')
 RECEIVE_URL = f"http://localhost:9922/v1/receive/{PHONE_NUMBER}"
 REMOVE_ATTACHMENT_URL = f"http://localhost:9922/v1/attachments/"
 SEND_URL = 'http://localhost:9922/v2/send'
-LIST_SIGNAL_GROUPS = f"http://localhost:9922/v1/groups/${PHONE_NUMBER}"
 GROUP_ID = os.getenv('GROUP_ID', '')
 GROUP_ID_SEND = os.getenv('GROUP_ID_SEND', '')
 CAT_API = os.getenv('CAT_API', '')
@@ -240,11 +238,10 @@ async def listen_to_server(counter):
         except websockets.ConnectionClosed as e:
             print(f"Connection closed: {e}")
 
-async def main():
+# Endpoint to start the asyncio server tasks
+@app.on_event("startup")
+async def start_tasks():
     counter = StringCounter()
     task1 = asyncio.create_task(listen_to_server(counter))
     task2 = asyncio.create_task(scheduled_task(counter))
     await asyncio.gather(task1, task2)
-
-if __name__ == "__main__":
-    asyncio.run(main())
